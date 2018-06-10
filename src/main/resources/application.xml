@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+    xmlns:aop="http://www.springframework.org/schema/aop"
+    xmlns:tx="http://www.springframework.org/schema/tx"
+    xsi:schemaLocation="
+           http://www.springframework.org/schema/beans
+           http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+           http://www.springframework.org/schema/aop
+           http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
+           http://www.springframework.org/schema/tx
+           http://www.springframework.org/schema/tx/spring-tx.xsd
+           http://www.springframework.org/schema/context
+           http://www.springframework.org/schema/context/spring-context-3.0.xsd">
+
+     <!-- 引入jdbc配置文件 -->
+<!--      <bean id="propertyConfigurer" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="locations">
+            <list>
+               <value>classpath:*.properties</value>
+                要是有多个配置文件，只需在这里继续添加即可
+            </list>
+        </property>
+    </bean> -->
+
+    <!-- 引入db.properties属性文件 -->
+    <context:property-placeholder location="classpath:db.properties, classpath:druidDB.properties" />
+
+    <!-- 配置数据源 -->
+    <bean id="dataSource"
+        class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+        <property name="driverClassName" value="${jdbc.driver}" />
+        <property name="url" value="${jdbc.url}" />
+        <property name="username" value="${jdbc.username}" />
+        <property name="password" value="${jdbc.password}" />
+    </bean>
+
+    <!--自动扫描映射接口-->
+    <!-- 自动扫描了所有的XxxxMapper.xml对应的mapper接口文件，这样就不用一个一个手动配置Mpper的映射了，只要Mapper接口类和Mapper映射文件对应起来就可以了。 -->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="basePackage" value="com.mybatis.common.user.mapper" />
+    </bean>
+
+    <!--创建一个sql会话工厂bean，指定数据源 -->
+    <!-- 配置Mybatis的文件 ，mapperLocations配置**Mapper.xml文件位置，configLocation配置mybatis-config文件位置-->
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <!-- 指定数据源 -->
+        <property name="dataSource" ref="dataSource" />
+        <!--指定sql映射xml文件的路径 -->
+        <property name="mapperLocations" value="classpath:com/mybatis/common/user/mapper/*.xml"/>
+        <!-- <property name="configLocation" value="classpath:mybatis-config.xml" /> -->
+        <!--类型别名包，引入com.mybatis.common.user.entity下的所有类 -->
+        <property name="typeAliasesPackage" value="com.mybatis.common.user.entity"></property>
+        <property name="typeHandlersPackage" value="com.mybatis.util" />
+    </bean>
+
+      <!-- 创建一个sqlSession对象 -->
+    <bean id="sqlSession" class="org.mybatis.spring.SqlSessionTemplate">
+        <constructor-arg index="0" ref="sqlSessionFactory" />
+    </bean>
+
+    <!-- 开启事务注解支持 -->
+    <tx:annotation-driven transaction-manager="transactionManager" />
+    <!-- 接口PlatformTransactionMnager实现 -->
+    <!-- 事务管理器 -->
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource" />
+    </bean>
+
+    <!-- 自动扫描注解的bean -->
+    <!-- <context:component-scan base-package="com.mybatis.common.user.service" /> -->
+    <context:component-scan base-package="com.mybatis">
+        <!-- AspectJ切入点语法详-->
+        <context:exclude-filter type="aspectj" expression="com.mybatis.common.user.mapper.*"/>
+    </context:component-scan>
+
+    <!-- 该标签有一个属性proxy-target-class，如果设置为true，则表明要代理的类是没有实现任何接口的，
+    这时spring会选择Cglib创建代理。讲到这里就应该讲一讲java创建代理的方法：
+    1、使用Java动态代理来创建，用到InvocationHandler和Proxy，该方式只能为接口实例创建代理。
+    2、使用CGLIB代理，就可以不局限于只能是实现了接口的类实例了。
+    spring aop首先选择Java动态代理来创建，如果发现代理对象没有实现任何接口，就会改用cglib。
+    刚这儿说到的proxy-target-class，如果设置为true，就是强制使用cglib创建代理。
+     -->
+    <aop:aspectj-autoproxy proxy-target-class="true" />
+
+    <!-- 测试beanPostProcessor -->
+<!--     <bean id="cluo1" class="com.mybatis.aopTest.BeanPostProcessor.footballPlayer">
+        <property name="name" value="C.罗纳尔多"></property>
+    </bean>
+    <bean class="com.mybatis.aopTest.BeanPostProcessor.beanPostProcessorImpl" />
+
+    <bean id="messi" class="com.mybatis.aopTest.BeanPostProcessor.footballPlayer">
+        <property name="name" value="Messi"></property>
+        <property name="team" value="Barcelona"></property>
+    </bean>
+
+    <bean id="CustomComponent" class="com.mybatis.aopTest.BeanPostProcessor.CustomComponent" />
+
+    <bean id="aware_suibianqu" class="com.mybatis.aopTest.BeanPostProcessor.AwareTest" />
+
+    <bean class="com.mybatis.aopTest.BeanPostProcessor.beanFactoryPostProcessorImpl" /> -->
+
+    <!-- 测试factoryBean -->
+    <bean id="cluo" class="com.mybatis.aopTest.factoryBean.footballPlayer">
+        <property name="name" value="C.罗纳尔多"></property>
+    </bean>
+    <bean id="PlayerFactory" class="com.mybatis.aopTest.factoryBean.PlayerFactory">
+        <property name="target" ref="cluo"></property>
+    </bean>
+
+    <bean class="com.mybatis.aopTest.factoryBean.beanPostProcessorImpl" />
+
+    <!-- 测试aop -->
+    <bean id="tank" class="com.mybatis.aopTest.aop.Tank" />
+    <bean id="fighterPlane" class="com.mybatis.aopTest.aop.FighterPlane" />
+    <!-- 下面是新添加的 -->
+    <bean id="fireAssist" class="com.mybatis.aopTest.aop.FireAssist" />
+    <!-- Aop根元素 -->
+    <aop:config>
+        <!-- 切面(Aspect) -->
+        <aop:aspect ref="fireAssist">
+            <!-- 切点 -->
+            <aop:pointcut expression="execution(* com.mybatis.aopTest.aop.*.*(..))" id="pc1"/>
+            <!-- 通知(Advice) -->
+            <aop:before method="ActionLog" pointcut-ref="pc1"/>
+            <aop:after method="ReportComplete"  pointcut-ref="pc1" />
+            <!-- 通知也可这样写 <aop:before method="ActionLog" pointcut="execution(* twm.spring.aopdemo.*.*(..))"/> -->
+        </aop:aspect>
+    </aop:config>
+    <!-- 可加多个切面(Aspect) -->
+</beans>

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE configuration  
+PUBLIC "-//mybatis.org//DTD Config 3.0//EN"  
+"http://mybatis.org/dtd/mybatis-3-config.dtd">  
+<configuration>  
+    <properties resource="db.properties"/>  
+    <typeAliases>  
+        <!-- <typeAlias alias="user" type="com.mybatis.common.user.entity.User"/>   -->
+        <package name="com.mybatis.common.user.entity" />
+    </typeAliases>  
+	<!-- 注册自定义类型处理器 -->
+	<typeHandlers>
+	    <typeHandler handler="com.mybatis.util.AddressTypeHandler" />
+	    <typeHandler handler="com.mybatis.util.CityTestTypeHandler" />
+	</typeHandlers>
+    <environments default="development">  
+        <environment id="development">  
+            <transactionManager type="JDBC" >
+				<property name="closeConnection" value="false"/>
+			</transactionManager>
+            <dataSource type="POOLED">  
+                <property name="driver" value="${jdbc.driver}" />  
+                <property name="url" value="${jdbc.url}" />  
+                <property name="username" value="${jdbc.username}" />  
+                <property name="password" value="${jdbc.password}" />  
+            </dataSource>  
+        </environment>  
+        <environment id="product">  
+            <transactionManager type="JDBC" />  
+            <dataSource type="POOLED">  
+                <property name="driver" value="${jdbc.driverClassName}" />  
+                <property name="url" value="${jdbc.url}" />  
+                <property name="username" value="${jdbc.username}" />  
+                <property name="password" value="${jdbc.password}" />  
+            </dataSource>  
+        </environment>  
+    </environments>  
+    <mappers>  
+        <!-- <mapper resource="com/mybatis/common/user/mapper/UserMapper.xml" /> -->
+        <!-- 使用mapper接口类路径 注意：此种方法要求mapper接口名称和mapper映射文件名称相同，且放在同一个目录中-->
+        <!-- <mapper class="com.mybatis.common.user.mapper.UserMapper"/> -->
+
+    <!-- 注意：此种方法要求mapper接口名称和mapper映射文件名称相同，且放在同一个目录中。 -->
+        <package name="com.mybatis.common.user.mapper"/>
+    </mappers>  
+</configuration> 

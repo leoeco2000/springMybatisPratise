@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.mybatis.common.user.mapper.UserMapper">
+    <!--
+    ehcache已经配置好了,然后只需要在想要缓存的mapper配置文件里面加入以下内容,该查询语句得到的结果将会被缓存
+    以下两个<cache>标签都可以,第一个可以输出日志,第二个不输出日志
+     <cache type="org.mybatis.caches.ehcache.LoggingEhcache"/>
+     <cache type="org.mybatis.caches.ehcache.EhcacheCache"/>
+    -->
+    <cache type="org.mybatis.caches.ehcache.LoggingEhcache"/> 
+    <!-- 自定义返回结果集 -->
+    <resultMap id="userMap" type="user">
+        <id property="id" column="id" jdbcType="INTEGER" />
+        <result property="username" column="username" javaType="String" jdbcType="VARCHAR"></result>
+        <result property="password" column="password" javaType="String" jdbcType="VARCHAR"></result>
+        <result property="salt" column="salt" javaType="String" jdbcType="VARCHAR"></result>
+        <result property="sex" column="sex" javaType="Short" jdbcType="INTEGER"></result>
+        <result property="address" column="address" javaType="Address" jdbcType="VARCHAR"></result>
+        <result property="cellphone" column="cellphone" javaType="String" jdbcType="VARCHAR"></result>
+        <result property="email" column="email" javaType="String" jdbcType="VARCHAR"></result>
+        <association property="gender" javaType="KeyAndValue"> 
+            <id property="key" column="keyNo" jdbcType="INTEGER" />
+            <result property="value" column="value" javaType="String" jdbcType="VARCHAR"></result>
+        </association>
+<!--         <association property="gender" resultMap="keyMap"/>  -->
+
+        <collection property="articleList" ofType="Article" javaType="list"
+             resultMap="articleMap">
+        </collection>
+    </resultMap>
+
+    <resultMap id="articleMap" type="Article">
+        <id property="userId" column="userId" jdbcType="INTEGER" />
+        <result property="name" column="name" javaType="String" jdbcType="VARCHAR"></result>
+    </resultMap>
+
+<!--     <resultMap id="articleMap" type="user">
+        <result property="username" column="username" javaType="String" jdbcType="VARCHAR"></result>
+        <collection property="articleList" ofType="Article" javaType="list"> 
+            <id property="userId" column="userId" jdbcType="INTEGER" />
+            <result property="name" column="name" javaType="String" jdbcType="VARCHAR"></result>
+        </collection>
+    </resultMap> -->
+    
+    <resultMap id="keyMap" type="KeyAndValue">
+        <id property="key" column="keyNo" jdbcType="INTEGER" />
+        <result property="value" column="value" javaType="String" jdbcType="VARCHAR"></result>
+    </resultMap>
+
+    <!-- useGeneratedKeys 取值范围true|false 默认值是：false。 
+    含义：设置是否使用JDBC的getGenereatedKeys方法(如：Mysql自增)获取主键并赋值到keyProperty设置的模型属性中 -->
+    <!-- #{}：表示一个占位符，用来接收输入参数的。 -->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into user (username,password,salt,sex,address,cellphone,email) values
+        (#{username},#{password},#{salt},#{sex},#{address, jdbcType=VARCHAR, javaType=Address},#{cellphone},#{email})
+    </insert>
+
+    <update id="update">
+        update user set
+        username=#{username},password=#{password},salt=#{salt},sex=#{sex},address=#{address, jdbcType=VARCHAR, javaType=Address},
+        cellphone=#{cellphone},email=#{email}
+         where id=#{id}
+    </update>
+
+    <delete id="delete" parameterType="int">
+        delete from user where id=#{id}
+    </delete>
+
+    <select id="selectById" parameterType="int" resultMap="userMap">
+       select * from user u, keyMap k where u.sex = k.keyNo and u.id=#{id}
+    </select>
+
+    <select id="findByName" parameterType="String" resultMap="userMap">
+        select * from user where username like CONCAT('%', #{searchkey}, '%')
+    </select>
+
+    <select id="selectAll" resultMap="userMap">
+        select * from user
+    </select>
+    
+    <select id="selectUserAndBook" resultMap="userMap">
+        select u.username, a.name from user u, article a where u.salt = a.userId
+    </select>
+</mapper>

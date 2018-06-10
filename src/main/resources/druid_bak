@@ -1,0 +1,92 @@
+
+    <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource"
+        destroy-method="close">
+        <property name="driverClassName" value="${druid.driver}" />
+        <property name="url" value="${druid.url}" />
+        <property name="username" value="${druid.username}" />
+        <property name="password" value="${druid.password}" />
+		<!-- 配置监控统计拦截的filters -->
+        <property name = "filters" value = "${druid.filters}" />
+        <!-- 最大并发连接数 -->
+        <property name = "maxActive" value = "${druid.maxActive}" />
+        <!-- 初始化连接数量 -->
+        <property name = "initialSize" value = "${druid.initialSize}" />
+        <!-- 配置获取连接等待超时的时间 -->
+        <property name = "maxWait" value = "${druid.maxWait}" />
+        <!-- 最小空闲连接数 -->
+        <property name = "minIdle" value = "${druid.minIdle}" />
+        <!-- 配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒 -->
+        <property name = "timeBetweenEvictionRunsMillis" value ="${druid.timeBetweenEvictionRunsMillis}" />
+        <!-- 配置一个连接在池中最小生存的时间，单位是毫秒 -->
+        <property name = "minEvictableIdleTimeMillis" value ="${druid.minEvictableIdleTimeMillis}" />
+
+        <property name = "validationQuery" value = "${druid.validationQuery}" />
+        <property name = "testWhileIdle" value = "${druid.testWhileIdle}" />
+        <property name = "testOnBorrow" value = "${druid.testOnBorrow}" />
+        <property name = "testOnReturn" value = "${druid.testOnReturn}" />
+        <property name = "maxOpenPreparedStatements" value ="${druid.maxOpenPreparedStatements}" />
+        <!-- 打开 removeAbandoned 功能 -->
+        <property name = "removeAbandoned" value = "${druid.removeAbandoned}" />
+        <!-- 1800 秒，也就是 30 分钟 -->
+        <property name = "removeAbandonedTimeout" value ="${druid.removeAbandonedTimeout}" />
+        <!-- 关闭 abanded 连接时输出错误日志 -->
+        <property name = "logAbandoned" value = "${druid.logAbandoned}" />
+        <property name="proxyFilters">
+            <list>
+                <ref bean="wall-filter"/>
+                <ref bean="stat-filter"/>
+                <ref bean="log-filter"/>
+            </list>
+        </property>
+    </bean>
+
+    <!-- 慢SQL记录 -->
+    <bean id="stat-filter" class="com.alibaba.druid.filter.stat.StatFilter">
+        <!-- 慢sql时间设置,即执行时间大于200毫秒的都是慢sql -->
+        <property name="slowSqlMillis" value="2000"/>
+        <property name="logSlowSql" value="true"/>
+    </bean>
+
+    <bean id="log-filter" class="com.alibaba.druid.filter.logging.Log4jFilter">
+        <property name="dataSourceLogEnabled" value="true" />
+        <property name="statementExecutableSqlLogEnable" value="true" />
+    </bean>
+
+    <!-- 防御SQL攻击 -->
+    <bean id="wall-filter" class="com.alibaba.druid.wall.WallFilter">
+        <property name="config" ref="wall-config" />
+        <property name="logViolation" value="true" />
+<!--         <property name="throwException" value="false" />   -->
+    </bean>
+
+    <bean id="wall-config" class="com.alibaba.druid.wall.WallConfig">
+        <property name="deleteAllow" value="false" />
+        <property name="truncateAllow" value="false" />
+        <property name="dropTableAllow" value="false" />
+        <property name="alterTableAllow" value="false" />
+        <property name="deleteWhereNoneCheck" value="false" />
+        <property name="updateWhereNoneCheck" value="false" />
+
+    </bean>
+
+    <!-- druid  spring监控   start -->
+	<bean id="druid-stat-interceptor"
+	    class="com.alibaba.druid.support.spring.stat.DruidStatInterceptor">
+	</bean>
+	
+	<bean id="druid-stat-pointcut"
+	    class="org.springframework.aop.support.JdkRegexpMethodPointcut"
+	     scope="prototype">
+	   <property name="patterns">
+	      <list>
+              <value>com.mybatis.common.user.mapper.Impl.*</value>
+	      </list>
+	   </property>
+	</bean>
+	
+	<aop:config>
+	   <aop:advisor advice-ref="druid-stat-interceptor"
+	             pointcut-ref="druid-stat-pointcut" />
+	</aop:config>
+
+    <!-- druid  spring监控   end -->

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xmlns:jaxws="http://cxf.apache.org/jaxws"
+	xmlns:jaxrs="http://cxf.apache.org/jaxrs"
+	xmlns:cxf="http://cxf.apache.org/core"
+	
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+	http://www.springframework.org/schema/beans/spring-beans.xsd
+	http://cxf.apache.org/jaxws http://cxf.apache.org/schemas/jaxws.xsd
+	http://cxf.apache.org/jaxrs http://cxf.apache.org/schemas/jaxrs.xsd
+	http://cxf.apache.org/core http://cxf.apache.org/schemas/core.xsd">
+
+    <!-- 引cxf的一些核心配置 -->
+	<import resource="classpath:META-INF/cxf/cxf.xml" />
+	<import resource="classpath:META-INF/cxf/cxf-servlet.xml" />
+
+    <!-- 接口发布 -->
+	<!-- restful service -->
+	<bean id="categoryService" class="com.mybatis.restful.service.Impl.CategoryServiceImpl" />
+	<jaxrs:server id="categoryWS" address="/category">
+		<jaxrs:serviceBeans>
+			<ref bean="categoryService" />
+		</jaxrs:serviceBeans>
+		<jaxrs:inInterceptors>
+			<bean class="org.apache.cxf.interceptor.LoggingInInterceptor" />
+		</jaxrs:inInterceptors>
+		<jaxrs:outInterceptors>
+			<bean class="org.apache.cxf.interceptor.LoggingOutInterceptor" />
+		</jaxrs:outInterceptors>
+		<!--支持的协议 -->
+		<jaxrs:extensionMappings>
+			<entry key="json" value="application/json" />
+			<entry key="xml" value="application/xml" />
+		</jaxrs:extensionMappings>
+          <jaxrs:providers>
+          <!-- 返回json数据 -->
+            <bean class="org.codehaus.jackson.jaxrs.JacksonJsonProvider" />
+          </jaxrs:providers>
+    </jaxrs:server>
+ </beans>
